@@ -138,6 +138,7 @@ INSTALL(
 )
 
 # bash completion script
+CONFIGURE_FILE( bash-completion.sh bash-completion.sh COPYONLY )
 INSTALL(
   FILES bash-completion.sh
   DESTINATION ${SYSCONFDIR}/bash_completion.d

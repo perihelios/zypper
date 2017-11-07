@@ -13,5 +13,11 @@ ADD_CUSTOM_TARGET( ctest
    COMMAND ctest -a
 )
 
+CONFIGURE_FILE( bash-completion-test.sh bash-completion-test.sh COPYONLY )
+ADD_CUSTOM_TARGET( bash_completion_test
+   COMMAND ./bash-completion-test.sh ../src/bash-completion.sh
+   VERBATIM
+)
+
 ADD_TESTS( PackageArgs )
 ADD_TESTS( SolverRequester )

@@ -43,8 +43,12 @@ _available_packages() {
 	_available_solvables2 $cur
 }
 
+__zypper_global_options() {
+	:
+}
+
 _zypper() {
-	ZYPPER="$(type -P zypper)"
+	local zypper="${__ZYPPER_TEST_STUB:-$(type -P zypper)}"
 
 	local noglob=$(shopt -po noglob)
 	local magic_string="Command options:"
@@ -56,19 +60,18 @@ _zypper() {
 	# Do not expand `?' for help
 	set -o noglob
 
-	if test ${#ZYPPER_CMDLIST[@]} -eq 0; then
-		ZYPPER_CMDLIST=($({ LC_ALL=POSIX $ZYPPER -q -h; $ZYPPER -q subcommand; } | \
-				sed -rn '/^[[:blank:]]*Commands:/,$ {
-					/[\t]{4}/d
-					s/^[[:blank:]]*//
-					s/^[[:upper:]].*://
-					s/[[:blank:]]+[[:upper:]].*$//
-					s/,[[:blank:]]+/\n/g
-					s/\?/\\?/
-					/^$/d
-					p
-				}'))
-	fi
+	ZYPPER_CMDLIST=($({ LC_ALL=POSIX $zypper -q -h; $zypper -q subcommand; } | \
+		sed -rn '/^[[:blank:]]*Commands:/,$ {
+			/[\t]{4}/d
+			s/^[[:blank:]]*//
+			s/^[[:upper:]].*://
+			s/[[:blank:]]+[[:upper:]].*$//
+			s/,[[:blank:]]+/\n/g
+			s/\?/\\?/
+			/^$/d
+			p
+		}'))
+
 
 	if test $COMP_CWORD -lt 1 ; then
 		let COMP_CWORD=${#COMP_WORDS[@]}
@@ -99,7 +102,7 @@ _zypper() {
 			return 0;
 		;;
 		"--repo" | "-r")
-			opts=(${opts[@]}$(echo; LC_ALL=POSIX $ZYPPER -q lr | \
+			opts=(${opts[@]}$(echo; LC_ALL=POSIX $zypper -q lr | \
 				sed -rn '/^[0-9]/{
 					s/^[0-9]+[[:blank:]]*\|[[:blank:]]*([^|]+).*/\1/
 					s/[[:blank:]]*$//
@@ -114,7 +117,7 @@ _zypper() {
 	unset prev
 	
 	if [[ "$command" =~ "zypper" ]]; then
-		opts=(${ZYPPER_CMDLIST[*]}$(echo; LC_ALL=POSIX $ZYPPER -q help 2>&1 | \
+		opts=(${ZYPPER_CMDLIST[*]}$(echo; LC_ALL=POSIX $zypper -q help 2>&1 | \
 			sed -rn '/Global Options:/,/Commands:/{
 				/[\t]{4}/d
 				s/^[[:blank:]]*//
@@ -132,7 +135,7 @@ _zypper() {
 
 	if test -n "$command" ; then
 		if ! [[ $cur =~ ^[^-] ]] ; then
-			opts=$(LC_ALL=POSIX $ZYPPER -q help $command 2>&1 | sed -e "1,/$magic_string/d" -e 's/.*--/--/' -e 's/ .*//')
+			opts=$(LC_ALL=POSIX $zypper -q help $command 2>&1 | sed -e "1,/$magic_string/d" -e 's/.*--/--/' -e 's/ .*//')
 		fi
 
 		#handling individual commands if they need more then we can dig from help
@@ -142,7 +145,7 @@ _zypper() {
 				opts=(${ZYPPER_CMDLIST[@]})
 			;;
 			removerepo | rr | modifyrepo | mr | renamerepo | nr | refresh | ref)
-				opts=(${opts[@]}$(echo; LC_ALL=POSIX $ZYPPER -q lr | \
+				opts=(${opts[@]}$(echo; LC_ALL=POSIX $zypper -q lr | \
 					sed -rn '/^[0-9]/{
 						s/^[0-9]+[[:blank:]]*\|[[:blank:]]*([^|]+).*/\1/
 						s/[[:blank:]]*$//
@@ -151,7 +154,7 @@ _zypper() {
 					}'))
 			;;
 			addservice | as | modifyservice | ms | removeservice | rs)
-				opts=(${opts[@]}$(echo; LC_ALL=POSIX $ZYPPER -q ls | \
+				opts=(${opts[@]}$(echo; LC_ALL=POSIX $zypper -q ls | \
 					sed -rn '/^[0-9]/{
 						s/^[0-9]+[[:blank:]]*\|[[:blank:]]*([^|]+).*/\1/
 						s/[[:blank:]]*$//
@@ -160,7 +163,7 @@ _zypper() {
 					}'))
 			;;
 			removelock | rl)
-				opts=(${opts[@]}$(echo; LC_ALL=POSIX $ZYPPER -q ll | \
+				opts=(${opts[@]}$(echo; LC_ALL=POSIX $zypper -q ll | \
 					sed -rn '/^[0-9]/{
 						s/^[0-9]+[[:blank:]]*\|[[:blank:]]*([^|]+).*/\1/p
 						s/[[:blank:]]*$//
